@@ -24,7 +24,23 @@ warmStrategyCache({
   strategy: pageCache,
 });
 
+//  A fallback when offline
+offlineFallback()
+
 registerRoute(({ request }) => request.mode === 'navigate', pageCache);
 
-// TODO: Implement asset caching
-registerRoute();
+// Set up a different cache for assets
+const assetCache = new CacheFirst({
+  cacheName: 'asset-cache',
+  plugins: [
+    new CacheableResponsePlugin({
+      statuses: [0, 200]
+    }),
+    new ExpirationPlugin({
+      maxAgeSeconds: 30 * 24 * 60 * 60,
+    }),
+  ],
+});
+
+// Implement asset cache
+registerRoute(({ request }) => ['style', 'script', 'worker'].includes(request.destination), assetCache);
